@@ -316,6 +316,11 @@ ip4_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
     return;
   }
 
+#if IP4_NAPT
+  if (ip_napt_forward(p, iphdr, inp, netif) != ERR_OK)
+    return;
+#endif
+
   /* Incrementally update the IP checksum. */
   if (IPH_CHKSUM(iphdr) >= PP_HTONS(0xffffU - 0x100)) {
     IPH_CHKSUM_SET(iphdr, IPH_CHKSUM(iphdr) + PP_HTONS(0x100) + 1);
@@ -401,6 +406,12 @@ ip4_input(struct pbuf *p, struct netif *inp)
     /* the packet has been eaten */
     return ERR_OK;
   }
+#endif
+
+#if IP4_NAPT
+  /* for unicast packet, check NAPT table and modify dest if needed */
+  if (!inp->napt && ip_addr_cmp(&iphdr->dest, &(inp->ip_addr)))
+    ip_napt_recv(p, iphdr, netif);
 #endif
 
   /* obtain IP header length in number of 32-bit words */

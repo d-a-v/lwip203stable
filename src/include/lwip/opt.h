@@ -1335,6 +1335,35 @@
 
 /*
    ----------------------------------
+   ---------- NAPT options ----------
+   ----------------------------------
+*/
+
+/**
+ * IP4_NAPT:
+ * setup Network Address Translation for TCP and UDP 
+ * only with IPv4, TCP or UDP, and IP_FORWARD enabled
+ */
+#if !defined IP4_NAPT || defined __DOXYGEN__
+#define IP4_NAPT                        1
+#endif
+
+#if !(IP_FORWARD && LWIP_IPV4 && ( LWIP_TCP || LWIP_UDP || LWIP_ICMP ))
+#undef IP4_NAPT
+#define IP4_NAPT                        0
+#endif
+
+#define IP_NAPT_MAX                     512
+#define IP_PORTMAP_MAX                  32
+#define IP_NAPT_TIMEOUT_MS_TCP          (10*60*1000)
+#define IP_NAPT_TIMEOUT_MS_TCP_DISCON   (3*1000)
+#define IP_NAPT_TIMEOUT_MS_UDP          (2*1000)
+#define IP_NAPT_TIMEOUT_MS_ICMP         (2*1000)
+#define IP_NAPT_PORT_RANGE_START        49152
+#define IP_NAPT_PORT_RANGE_END          61439
+
+/*
+   ----------------------------------
    ---------- Pbuf options ----------
    ----------------------------------
 */
