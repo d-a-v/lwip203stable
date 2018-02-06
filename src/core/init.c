@@ -383,7 +383,7 @@ lwip_init(void)
   sys_timeouts_init();
 #endif /* LWIP_TIMERS */
 
-#if IP_NAPT
+#if IP4_NAPT
   ip_napt_init();
 #endif /* IP_NAPT */
 }
