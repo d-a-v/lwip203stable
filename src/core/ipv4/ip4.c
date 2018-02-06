@@ -56,6 +56,7 @@
 #include "lwip/autoip.h"
 #include "lwip/stats.h"
 #include "lwip/prot/dhcp.h"
+#include "lwip/ip4_napt.h"
 
 #include <string.h>
 
@@ -411,7 +412,7 @@ ip4_input(struct pbuf *p, struct netif *inp)
 #if IP4_NAPT
   /* for unicast packet, check NAPT table and modify dest if needed */
   if (!inp->napt && ip_addr_cmp(&iphdr->dest, &(inp->ip_addr)))
-    ip_napt_recv(p, iphdr, netif);
+    ip_napt_recv(p, iphdr);
 #endif
 
   /* obtain IP header length in number of 32-bit words */

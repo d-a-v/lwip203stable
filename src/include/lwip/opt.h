@@ -1345,7 +1345,7 @@
  * only with IPv4, TCP or UDP, and IP_FORWARD enabled
  */
 #if !defined IP4_NAPT || defined __DOXYGEN__
-#define IP4_NAPT                        1
+#define IP4_NAPT                        0
 #endif
 
 #if !(IP_FORWARD && LWIP_IPV4 && ( LWIP_TCP || LWIP_UDP || LWIP_ICMP ))

@@ -1,4 +1,12 @@
 
+#include "lwip/opt.h"
+#include "lwip/sys.h"
+#include "lwip/prot/ip.h"
+#include "lwip/prot/ip4.h"
+#include "lwip/pbuf.h"
+#include "lwip/udp.h"
+#include "lwip/netif.h"
+#include "lwip/priv/tcp_priv.h"
 #include "lwip/ip4_napt.h"
 
 #if IP4_NAPT
@@ -179,10 +187,10 @@ ip_napt_find(u8_t proto, u32_t addr, u16_t port, u16_t mport, u8_t dest)
     t = NT(i);
     next = t->next;
 #if LWIP_TCP
-    if (t->proto == IP_PROTO_TCP &&
-        (((t->finack1 && t->finack2 || !t->synack) &&
-          now - t->last > IP_NAPT_TIMEOUT_MS_TCP_DISCON) ||
-         now - t->last > IP_NAPT_TIMEOUT_MS_TCP)) {
+    if (   t->proto == IP_PROTO_TCP
+        && (   (   ((t->finack1 && t->finack2) || !t->synack)
+                && now - t->last > IP_NAPT_TIMEOUT_MS_TCP_DISCON)
+            || now - t->last > IP_NAPT_TIMEOUT_MS_TCP)) {
       ip_napt_free(t);
       continue;
     }
@@ -340,7 +348,7 @@ void
 ip_napt_modify_port_tcp(struct tcp_hdr *tcphdr, u8_t dest, u16_t newval)
 {
   u16_t s1 = PP_NTOHS(dest ? tcphdr->dest : tcphdr->src), s2 = PP_NTOHS(newval);
-  u32_t chksum = PP_NTOHS(tcphdr->chksum), chksum2 = chksum;
+  u32_t chksum = PP_NTOHS(tcphdr->chksum);
   chksum += s1 - s2;
   chksum = (chksum >> 16) + (chksum & 0xffff);
   tcphdr->chksum = PP_HTONS(chksum);
@@ -351,7 +359,7 @@ ip_napt_modify_port_tcp(struct tcp_hdr *tcphdr, u8_t dest, u16_t newval)
 }
 
 void
-ip_napt_modify_addr_tcp(struct tcp_hdr *tcphdr, ip_addr_p_t *oldval, u32_t newval)
+ip_napt_modify_addr_tcp(struct tcp_hdr *tcphdr, ip4_addr_p_t *oldval, u32_t newval)
 {
   u32_t s1 = PP_NTOHL(oldval->addr), s2 = PP_NTOHL(newval);
   u32_t chksum = PP_NTOHS(tcphdr->chksum);
@@ -366,7 +374,7 @@ void
 ip_napt_modify_port_udp(struct udp_hdr *udphdr, u8_t dest, u16_t newval)
 {
   u16_t s1 = PP_NTOHS(dest ? udphdr->dest : udphdr->src), s2 = PP_NTOHS(newval);
-  u32_t chksum = PP_NTOHS(udphdr->chksum), chksum2 = chksum;
+  u32_t chksum = PP_NTOHS(udphdr->chksum);
   chksum += s1 - s2;
   chksum = (chksum >> 16) + (chksum & 0xffff);
   udphdr->chksum = PP_HTONS(chksum);
@@ -377,7 +385,7 @@ ip_napt_modify_port_udp(struct udp_hdr *udphdr, u8_t dest, u16_t newval)
 }
 
 void
-ip_napt_modify_addr_udp(struct udp_hdr *udphdr, ip_addr_p_t *oldval, u32_t newval)
+ip_napt_modify_addr_udp(struct udp_hdr *udphdr, ip4_addr_p_t *oldval, u32_t newval)
 {
   u32_t s1 = PP_NTOHL(oldval->addr), s2 = PP_NTOHL(newval);
   u32_t chksum = PP_NTOHS(udphdr->chksum);
@@ -388,7 +396,7 @@ ip_napt_modify_addr_udp(struct udp_hdr *udphdr, ip_addr_p_t *oldval, u32_t newva
 #endif // LWIP_UDP
 
 void
-ip_napt_modify_addr(struct ip_hdr *iphdr, ip_addr_p_t *field, u32_t newval)
+ip_napt_modify_addr(struct ip_hdr *iphdr, ip4_addr_p_t *field, u32_t newval)
 {
   u32_t s1 = PP_NTOHL(field->addr), s2 = PP_NTOHL(newval);
   u32_t chksum = PP_NTOHS(IPH_CHKSUM(iphdr));
@@ -407,7 +415,7 @@ ip_napt_modify_addr(struct ip_hdr *iphdr, ip_addr_p_t *field, u32_t newval)
  * @param inp the netif on which this packet was received
  */
 void
-ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
+ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr)
 {
   struct portmap_table *m;
   struct napt_table *t;

@@ -41,8 +41,9 @@ struct portmap_table {
 };
 
 void  ip_napt_init();
+void  ip_napt_enable(u32_t addr, int enable);
 err_t ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct netif *outp);
-void  ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp);
+void  ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr);
 
 #ifdef __cplusplus
 }
